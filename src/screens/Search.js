@@ -6,18 +6,17 @@ import React, {
 import {
     KeyboardAvoidingView,
     ScrollView,
-    Text,
     TextInput,
-    TouchableOpacity,
     View
 } from "react-native"
 
 import TopBar from "../customComps/TopBar"
+import List from "../customComps/List"
 
 export default Search = props => {
-    let [searchText, setSearchText] = useState("")
-    let [allPeoples, setAllPeoples] = useState([])
-    let [peoples, setPeoples] = useState([])
+    const [searchText, setSearchText] = useState("")
+    const [allPeoples, setAllPeoples] = useState([])
+    const [peoples, setPeoples] = useState([])
 
     useEffect(() => {
         LoadPeoples()
@@ -88,23 +87,11 @@ export default Search = props => {
                     {
                         peoples.map((item, index) => {
                             return (
-                                <TouchableOpacity
+                                <List
                                     key = {index.toString()}
-                                    onPress = {() => props.navigation.push("ProfileDetails", {username: item})}
-                                    style = {{
-                                        borderBottomWidth: 1,
-                                        paddingVertical: 10
-                                    }}
-                                >
-                                    <Text
-                                        key = {index.toString()}
-                                        style = {{
-                                            fontWeight: "bold"
-                                        }}
-                                    >
-                                        {item}
-                                    </Text>
-                                </TouchableOpacity>
+                                    navigation = {props.navigation}
+                                    username = {item}
+                                />
                             )
                         })
                     }

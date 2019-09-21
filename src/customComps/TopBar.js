@@ -1,11 +1,12 @@
 import React from "react"
 
 import {
-    Image,
     Text,
     TouchableOpacity,
     View
 } from "react-native"
+
+import IconMaterialCommunity from 'react-native-vector-icons/MaterialCommunityIcons'
 
 export default TopBar = props => {
     return (
@@ -30,13 +31,10 @@ export default TopBar = props => {
                             marginRight: 10
                         }}
                     >
-                        <Image
-                            resizeMode = "contain"
-                            source = {require("../icons/back.png")}
-                            style = {{
-                                height: 25,
-                                width: 25
-                            }}
+                        <IconMaterialCommunity
+                            name = "arrow-left"
+                            size = {30}
+                            color = "white"
                         />
                     </TouchableOpacity>
             }

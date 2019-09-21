@@ -35,15 +35,48 @@ import Profile from './src/screens/Profile'
 import Search from './src/screens/Search'
 
 import {
-    ActivityIndicator,
     View
 } from "react-native"
 
+import IconMaterial from "react-native-vector-icons/MaterialIcons"
+import IconEntypo from "react-native-vector-icons/Entypo"
+import ActivityIndicatorModal from './src/customComps/ActivityIndicatorModal'
+
 const BottomTab = createBottomTabNavigator(
     {
-        Public,
-        Search,
-        Profile
+        Public: {
+            screen: Public,
+            navigationOptions: {
+                tabBarIcon: ({ tintColor }) => (
+                    <IconMaterial name = "public" size = {25} color = {tintColor} />
+                )
+            }
+        },
+        Search: {
+            screen: Search,
+            navigationOptions: {
+                tabBarIcon: ({ tintColor }) => (
+                    <IconMaterial name = "search" size = {27} color = {tintColor} />
+                )
+            }
+        },
+        Profile: {
+            screen: Profile,
+            navigationOptions: {
+                tabBarIcon: ({ tintColor }) => (
+                    <IconEntypo name = "user" size = {22} color = {tintColor} />
+                )
+            }
+        }
+    },
+    {
+        tabBarOptions: {
+            style: {
+                backgroundColor: "seagreen"
+            },
+            activeTintColor: "lightyellow",
+            inactiveTintColor: "lightgray"
+        }
     }
 )
 
@@ -82,24 +115,24 @@ export default App = props => {
             statusBarColor = "seagreen"
             statusBarStyle = "light-content"
         >
-            {
-                realmsLoaded ?
-                    <Stack />
-                    :
-                    <View
-                        style = {{
-                            alignItems: "center",
-                            backgroundColor: "dimgray",
-                            flex: 1,
-                            justifyContent: "center"
-                        }}
-                    >
-                        <ActivityIndicator
-                            color = "mediumseagreen"
-                            size = "large"
-                        />
-                    </View>
-            }
+            <View
+                style = {{
+                    backgroundColor: "white",
+                    flex: 1
+                }}
+            >
+                {
+                    realmsLoaded ?
+                        <Stack />
+                        :
+                        null
+                }
+
+                <ActivityIndicatorModal
+                    color = "green"
+                    visible = {!realmsLoaded}
+                />
+            </View>
         </ViewContainer>
     )
 }

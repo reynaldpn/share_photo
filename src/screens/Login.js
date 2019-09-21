@@ -1,5 +1,6 @@
 import React, {
     useEffect,
+    useRef,
     useState
 } from "react"
 
@@ -11,6 +12,7 @@ import {
 import {
     Alert,
     Image,
+    Keyboard,
     Text,
     TextInput,
     TouchableOpacity,
@@ -24,18 +26,27 @@ import {
 import {
     GetRealmObjs
 } from "../helpers/Realm"
+import ActivityIndicatorModal from "../customComps/ActivityIndicatorModal"
 
 export default Login = props => {
-    useEffect(() => {
-        let realmSess = require("../refs/realmSess").Session
+    let passwordTextInput = useRef()
 
-        if(GetRealmObjs(realmSess).length == 1) {
-            GoToSessionPage()
-        }
+    useEffect(() => {
+        setTimeout(() => {
+            let realmSess = require("../refs/realmSess").Session
+
+            setLoadRealm(false)
+
+            if(GetRealmObjs(realmSess).length == 1) {
+                GoToSessionPage()
+            }
+        }, 50)
     }, [])
 
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
+    const [tryLogin, setTryLogin] = useState(false)
+    const [loadRealm, setLoadRealm] = useState(true)
 
     return (
         <View
@@ -56,10 +67,21 @@ export default Login = props => {
                 }}
             />
 
+            <View
+                style = {{
+                    backgroundColor: "rgba(0, 0, 0, 0.5)",
+                    position: "absolute",
+                    top: 0,
+                    bottom: 0,
+                    right: 0,
+                    left: 0
+                }}
+            />
+
             <Text
                 style = {{
                     color: "white",
-                    fontSize: 36,
+                    fontSize: 48,
                     fontWeight: "bold",
                     marginVertical: 20,
                     textAlign: "center"
@@ -78,6 +100,7 @@ export default Login = props => {
                 <TextInput
                     autoCapitalize = "none"
                     onChangeText = {value => setUsername(value)}
+                    onSubmitEditing = {() => passwordTextInput.current.focus()}
                     placeholder = "Username"
                     style = {{
                         backgroundColor: "white",
@@ -94,6 +117,7 @@ export default Login = props => {
                     onChangeText = {value => setPassword(value)}
                     onSubmitEditing = {() => SubmitLogin()}
                     placeholder = "Password"
+                    ref = {passwordTextInput}
                     secureTextEntry
                     style = {{
                         backgroundColor: "white",
@@ -106,67 +130,88 @@ export default Login = props => {
                     value = {password}
                 />
                 
-                <TouchableOpacity
-                    activeOpacity = {0.7}
-                    onPress = {() => SubmitLogin()}
+                <View
                     style = {{
                         alignSelf: "center",
-                        backgroundColor: "seagreen",
+                        backgroundColor: "black",
                         borderRadius: 10,
                         marginTop: 20,
-                        padding: 10
+                        overflow: "hidden"
                     }}
                 >
-                    <Text
+                    <TouchableOpacity
+                        activeOpacity = {0.7}
+                        onPress = {() => SubmitLogin()}
                         style = {{
-                            color: "white",
-                            fontSize: 24,
-                            fontWeight: "bold"
+                            backgroundColor: "seagreen",
+                            paddingHorizontal: 20,
+                            paddingVertical: 10
                         }}
                     >
-                        Login
-                    </Text>
-                </TouchableOpacity>
+                        <Text
+                            style = {{
+                                color: "white",
+                                fontSize: 24,
+                                fontWeight: "bold"
+                            }}
+                        >
+                            Login
+                        </Text>
+                    </TouchableOpacity>
+                </View>
             </View>
+
+            <ActivityIndicatorModal
+                color = "green"
+                visible = {loadRealm || tryLogin}
+            />
         </View>
     )
 
     function SubmitLogin() {
-        if(username === "") {
-            Alert.alert("Info", "Username cannot be empty!")
-        } else if(password === "") {
-            Alert.alert("Info", "Password cannot be empty!")
-        } else {
-            fetch("https://reynova.000webhostapp.com/share-photo/users.json")
-            .then(res => res.json())
-            .then(resJson => {
-                let users = resJson.data
+        Keyboard.dismiss()
 
-                let userFound = false
-
-                for(let user of users) {
-                    if(user.username == username.toLowerCase() && user.password == password.toLowerCase()) {
-                        userFound = true
-
-                        break
+        setTimeout(() => {
+            if(username === "") {
+                Alert.alert("Info", "Username cannot be empty!")
+            } else if(password === "") {
+                Alert.alert("Info", "Password cannot be empty!")
+            } else {
+                setTryLogin(true)
+    
+                fetch("https://reynova.000webhostapp.com/share-photo/users.json")
+                .then(res => res.json())
+                .then(resJson => {
+                    setTryLogin(false)
+    
+                    let users = resJson.data
+    
+                    let userFound = false
+    
+                    for(let user of users) {
+                        if(user.username == username.toLowerCase() && user.password == password.toLowerCase()) {
+                            userFound = true
+    
+                            break
+                        }
                     }
-                }
-
-                if(userFound) {
-                    let realmSess = require("../refs/realmSess").Session
-
-                    realmSess.realm.write(() => {
-                        realmSess.realm.create(realmSess.schemaName, RealmRefs().Session.InitValue({
-                            username: username
-                        }))
-                    })
-
-                    GoToSessionPage()
-                } else {
-                    Alert.alert("Info", "Wrong username or password!")
-                }
-            })
-        }
+    
+                    if(userFound) {
+                        let realmSess = require("../refs/realmSess").Session
+    
+                        realmSess.realm.write(() => {
+                            realmSess.realm.create(realmSess.schemaName, RealmRefs().Session.InitValue({
+                                username: username
+                            }))
+                        })
+    
+                        GoToSessionPage()
+                    } else {
+                        Alert.alert("Info", "Wrong username or password!")
+                    }
+                })
+            }
+        }, 50)
     }
 
     function GoToSessionPage() {

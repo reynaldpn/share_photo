@@ -23,8 +23,8 @@ import {
 import TopBar from '../customComps/TopBar'
 
 export default Public = props => {
-    let [photos, setPhotos] = useState([])
-    let [viewedImageURI, setViewedImageURI] = useState("")
+    const [photos, setPhotos] = useState([])
+    const [viewedImageURI, setViewedImageURI] = useState("")
 
     useEffect(() => {
         LoadPhotos()

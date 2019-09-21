@@ -29,14 +29,17 @@ import {
 
 import TopBar from '../customComps/TopBar'
 
+import IconOcticons from 'react-native-vector-icons/Octicons'
+import IconMaterialCommunity from 'react-native-vector-icons/MaterialCommunityIcons'
+
 export default ProfileDetails = props => {
-    let [isThisUserSession, setIsThisUserSession] = useState(false)
-    let [username, setUsername] = useState("")
-    let [photos, setPhotos] = useState([])
-    let [following, setFollowing] = useState([])
-    let [follower, setFollower] = useState([])
-    let [showMode, setShowMode] = useState("Grid")
-    let [viewedImageURI, setViewedImageURI] = useState("")
+    const [isThisUserSession, setIsThisUserSession] = useState(false)
+    const [username, setUsername] = useState("")
+    const [photos, setPhotos] = useState([])
+    const [following, setFollowing] = useState([])
+    const [follower, setFollower] = useState([])
+    const [showMode, setShowMode] = useState("Grid")
+    const [viewedImageURI, setViewedImageURI] = useState("")
 
     useEffect(() => {
         let pickedUsername = ""
@@ -96,13 +99,14 @@ export default ProfileDetails = props => {
                                 activeOpacity = {0.7}
                                 onPress = {() => Logout()}
                                 style = {{
-                                    backgroundColor: "salmon",
+                                    backgroundColor: "red",
                                     borderRadius: 10,
                                     padding: 10
                                 }}
                             >
                                 <Text
                                     style = {{
+                                        color: "white",
                                         fontSize: 18,
                                         fontWeight: "bold"
                                     }}
@@ -185,26 +189,20 @@ export default ProfileDetails = props => {
                 <TouchableOpacity
                     onPress = {() => setShowMode("Grid")}
                 >
-                    <Image
-                        resizeMode = "contain"
-                        source = {showMode == "Grid" ? require("../icons/grid-selected.png") : require("../icons/grid.png")}
-                        style = {{
-                            height: 25,
-                            width: 25
-                        }}
+                    <IconMaterialCommunity
+                        name = "grid"
+                        size = {30}
+                        color = {showMode == "Grid" ? "rgb(0, 200, 255)" : "black"}
                     />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     onPress = {() => setShowMode("List")}
                 >
-                    <Image
-                        resizeMode = "contain"
-                        source = {showMode == "List" ? require("../icons/list-selected.png") : require("../icons/list.png")}
-                        style = {{
-                            height: 25,
-                            width: 25
-                        }}
+                    <IconOcticons
+                        name = "three-bars"
+                        size = {30}
+                        color = {showMode == "List" ? "rgb(0, 200, 255)" : "black"}
                     />
                 </TouchableOpacity>
             </View>
