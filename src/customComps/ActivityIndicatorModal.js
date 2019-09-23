@@ -21,7 +21,6 @@ export default ActivityIndicatorModal = props => {
                     }
                 }}
                 style = {{
-                    backgroundColor: "rgba(0, 0, 0, 0.75)",
                     bottom: 0,
                     left: 0,
                     position: "absolute",
@@ -31,9 +30,10 @@ export default ActivityIndicatorModal = props => {
             />
 
             <View
-                pointerEvents = "none"
+                pointerEvents = "box-none"
                 style = {{
                     alignItems: "center",
+                    backgroundColor: "rgba(0, 0, 0, 0.75)",
                     flex: 1,
                     justifyContent: "center"
                 }}

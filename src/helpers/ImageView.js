@@ -1,10 +1,10 @@
 export function SetImages(images) {
     let newImages = []
 
-    for(let i = 0; i < images.length; i++) {
+    for(let image of images) {
         newImages.push({
             source: {
-                uri: images[i],
+                uri: image
             }
         })
     }

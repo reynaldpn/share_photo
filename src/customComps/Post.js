@@ -39,11 +39,11 @@ export default Post = props => {
 
             <TouchableOpacity
                 activeOpacity = {0.7}
-                onPress = {() => props.ViewImage(props.item.photo_url)}
+                onPress = {() => props.ViewImage(props.item.photo)}
             >
                 <Image
                     resizeMode = "cover"
-                    source = {{uri: props.item.photo_url}}
+                    source = {{uri: props.item.photo}}
                     style = {{
                         backgroundColor: "dimgray",
                         height: (Dimensions.get("screen").width - 40) / 16 * 9,

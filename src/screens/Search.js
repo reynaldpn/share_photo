@@ -13,6 +13,10 @@ import {
 import TopBar from "../customComps/TopBar"
 import List from "../customComps/List"
 
+import {
+    API
+} from "../refs/API"
+
 export default Search = props => {
     const [searchText, setSearchText] = useState("")
     const [allPeoples, setAllPeoples] = useState([])
@@ -20,6 +24,12 @@ export default Search = props => {
 
     useEffect(() => {
         LoadPeoples()
+        
+        let focusListener = props.navigation.addListener('willFocus', () => LoadPeoples())
+
+        return (() => {
+            focusListener.remove()
+        })
     }, [])
 
     return (
@@ -101,17 +111,18 @@ export default Search = props => {
     )
 
     function LoadPeoples() {
-        fetch("https://reynova.000webhostapp.com/share-photo/users.json")
-        .then(res => res.json())
-        .then(resJson => {
-            let newPeoples = []
+        API().GetUsers()
+        .then(res => {
+            if(res.trim()[0] == "{" || res.trim()[0] == "[") {
+                let newPeoples = []
 
-            for(let people of resJson.data) {
-                newPeoples.push(people.username)
+                for(let people of JSON.parse(res)) {
+                    newPeoples.push(people.username)
+                }
+
+                setAllPeoples(newPeoples)
+                setPeoples(newPeoples)
             }
-
-            setAllPeoples(newPeoples)
-            setPeoples(newPeoples)
         })
     }
 }

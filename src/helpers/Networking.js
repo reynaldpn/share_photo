@@ -1,14 +1,9 @@
-import {
-    baseUrls,
-    usedBaseUrlIndex,
-} from "../refs/API"
-
 export function Fetching(params = {url: "", bodyJson}) {
     return fetch(params.url, params.bodyJson).then(response => response.text())
 }
 
 export function AppendURL(additionalUrl = "") {
-    return baseUrls[usedBaseUrlIndex] + additionalUrl
+    return require("../refs/baseURL").baseURL + additionalUrl
 }
 
 export function CreatePOST(params = {}) {
@@ -18,6 +13,17 @@ export function CreatePOST(params = {}) {
             Accept : "application/json",
             "Content-Type" : "application/json",
         },
-        body : JSON.stringify(params),
+        body : JSON.stringify(params)
+    }
+}
+
+export function CreatePATCH(params = {}) {
+    return {
+        method : "PATCH",
+        headers : {
+            Accept : "application/json",
+            "Content-Type" : "application/json",
+        },
+        body : JSON.stringify(params)
     }
 }

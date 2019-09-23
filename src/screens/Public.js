@@ -22,12 +22,22 @@ import {
 
 import TopBar from '../customComps/TopBar'
 
+import {
+    API
+} from '../refs/API'
+
 export default Public = props => {
     const [photos, setPhotos] = useState([])
     const [viewedImageURI, setViewedImageURI] = useState("")
 
     useEffect(() => {
         LoadPhotos()
+        
+        let focusListener = props.navigation.addListener('willFocus', () => LoadPhotos())
+
+        return (() => {
+            focusListener.remove()
+        })
     }, [])
 
     return (
@@ -78,54 +88,56 @@ export default Public = props => {
     )
 
     function LoadPhotos() {
-        fetch("https://reynova.000webhostapp.com/share-photo/users.json")
-        .then(res => res.json())
-        .then(resJson => {
-            let username = GetRealmObjs(require("../refs/realmSess").Session)[0].username
+        API().GetUsers()
+        .then(res => {
+            if(res.trim()[0] == "{" || res.trim()[0] == "[") {
+                let username = GetRealmObjs(require("../refs/realmSess").Session)[0].username
 
-            let users = resJson.data
+                let users = JSON.parse(res)
 
-            let following = []
+                let following = []
 
-            for(let user of users) {
-                if(user.username == username) {
-                    following = user.following
+                for(let user of users) {
+                    if(user.username == username) {
+                        following = user.following
 
-                    break
-                }
-            }
-
-            fetch("https://reynova.000webhostapp.com/share-photo/photos.json")
-            .then(res => res.json())
-            .then(resJson => {
-                let posts = resJson.data
-
-                let photos = []
-
-                for(let post of posts) {
-                    let postShouldBeDisplayed = false
-
-                    if(post.username == username) {
-                        postShouldBeDisplayed = true
+                        break
                     }
+                }
 
-                    for(let followingPerson of following) {
-                        if(post.username == followingPerson) {
-                            postShouldBeDisplayed = true
+                API().GetPosts()
+                .then(res => {
+                    if(res.trim()[0] == "{" || res.trim()[0] == "[") {
+                        let posts = JSON.parse(res)
 
-                            break
+                        let photos = []
+
+                        for(let post of posts) {
+                            let postShouldBeDisplayed = false
+
+                            if(post.username == username) {
+                                postShouldBeDisplayed = true
+                            }
+
+                            for(let followingPerson of following) {
+                                if(post.username == followingPerson) {
+                                    postShouldBeDisplayed = true
+
+                                    break
+                                }
+                            }
+
+                            if(postShouldBeDisplayed) {
+                                photos.push(post)
+                            }
                         }
+
+                        photos.sort((a, b) => (a.time < b.time) ? 1 : ((b.time < a.time) ? -1 : 0))
+
+                        setPhotos(photos)
                     }
-
-                    if(postShouldBeDisplayed) {
-                        photos.push(post)
-                    }
-                }
-
-                photos.sort((a, b) => (a.time < b.time) ? 1 : ((b.time < a.time) ? -1 : 0))
-
-                setPhotos(photos)
-            })
+                })
+            }
         })
     }
 }

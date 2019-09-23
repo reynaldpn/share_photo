@@ -20,8 +20,8 @@ import {
 } from 'react-navigation-stack'
 
 import {
-    createBottomTabNavigator
-} from 'react-navigation-tabs'
+    createMaterialBottomTabNavigator
+} from "react-navigation-material-bottom-tabs"
 
 import StackViewStyleInterpolator from 'react-navigation-stack/src/views/StackView/StackViewStyleInterpolator'
 
@@ -33,6 +33,7 @@ import Follow from './src/screens/Follow'
 import Public from './src/screens/Public'
 import Profile from './src/screens/Profile'
 import Search from './src/screens/Search'
+import CreatePost from './src/screens/CreatePost'
 
 import {
     View
@@ -42,7 +43,7 @@ import IconMaterial from "react-native-vector-icons/MaterialIcons"
 import IconEntypo from "react-native-vector-icons/Entypo"
 import ActivityIndicatorModal from './src/customComps/ActivityIndicatorModal'
 
-const BottomTab = createBottomTabNavigator(
+const BottomTab = createMaterialBottomTabNavigator(
     {
         Public: {
             screen: Public,
@@ -60,6 +61,15 @@ const BottomTab = createBottomTabNavigator(
                 )
             }
         },
+        CreatePost: {
+            screen: CreatePost,
+            navigationOptions: {
+                title: "Create Post",
+                tabBarIcon: ({ tintColor }) => (
+                    <IconMaterial name = "add-a-photo" size = {22} color = {tintColor} />
+                )
+            }
+        },
         Profile: {
             screen: Profile,
             navigationOptions: {
@@ -70,12 +80,10 @@ const BottomTab = createBottomTabNavigator(
         }
     },
     {
-        tabBarOptions: {
-            style: {
-                backgroundColor: "seagreen"
-            },
-            activeTintColor: "lightyellow",
-            inactiveTintColor: "lightgray"
+        inactiveColor: "lightgray",
+        activeColor: "lightyellow",
+        barStyle: {
+            backgroundColor: "seagreen"
         }
     }
 )

@@ -32,6 +32,10 @@ import TopBar from '../customComps/TopBar'
 import IconOcticons from 'react-native-vector-icons/Octicons'
 import IconMaterialCommunity from 'react-native-vector-icons/MaterialCommunityIcons'
 
+import {
+    API
+} from '../refs/API'
+
 export default ProfileDetails = props => {
     const [isThisUserSession, setIsThisUserSession] = useState(false)
     const [username, setUsername] = useState("")
@@ -40,6 +44,7 @@ export default ProfileDetails = props => {
     const [follower, setFollower] = useState([])
     const [showMode, setShowMode] = useState("Grid")
     const [viewedImageURI, setViewedImageURI] = useState("")
+    const [isFollowing, setIsFollowing] = useState(false)
 
     useEffect(() => {
         let pickedUsername = ""
@@ -48,6 +53,33 @@ export default ProfileDetails = props => {
             pickedUsername = props.username
         } else if(props.navigation.getParam("username") != undefined) {
             pickedUsername = props.navigation.getParam("username")
+
+            API().GetUsers()
+            .then(res => {
+                let otherUserDetails = undefined
+            
+                for(user of JSON.parse(res)) {
+                    if(user.username == pickedUsername) {
+                        otherUserDetails = user
+
+                        break
+                    }
+                }
+
+                let currentSessionUsername = GetRealmObjs(require("../refs/realmSess").Session)[0].username
+
+                let alreadyFollowingOtherUser = false
+
+                for(let otherUserFollower of otherUserDetails.follower) {
+                    if(otherUserFollower == currentSessionUsername) {
+                        alreadyFollowingOtherUser = true
+
+                        break
+                    }
+                }
+
+                setIsFollowing(alreadyFollowingOtherUser)
+            })
         }
 
         setUsername(pickedUsername)
@@ -55,6 +87,15 @@ export default ProfileDetails = props => {
 
         LoadProfile(pickedUsername)
         LoadPhotos(pickedUsername)
+
+        let focusListener = props.navigation.addListener('willFocus', () => {
+            LoadProfile(pickedUsername)
+            LoadPhotos(pickedUsername)
+        })
+
+        return (() => {
+            focusListener.remove()
+        })
     }, [])
 
     return (
@@ -115,24 +156,25 @@ export default ProfileDetails = props => {
                                 </Text>
                             </TouchableOpacity>
                             :
-                            null
-                            // <TouchableOpacity
-                            //     activeOpacity = {0.7}
-                            //     style = {{
-                            //         backgroundColor: "rgb(0, 200, 255)",
-                            //         borderRadius: 10,
-                            //         padding: 10
-                            //     }}
-                            // >
-                            //     <Text
-                            //         style = {{
-                            //             fontSize: 18,
-                            //             fontWeight: "bold"
-                            //         }}
-                            //     >
-                            //         Follow
-                            //     </Text>
-                            // </TouchableOpacity>
+                            <TouchableOpacity
+                                activeOpacity = {0.7}
+                                onPress = {() => Follow()}
+                                style = {{
+                                    backgroundColor: "rgb(0, 200, 255)",
+                                    borderRadius: 10,
+                                    padding: 10
+                                }}
+                            >
+                                <Text
+                                    style = {{
+                                        color: "white",
+                                        fontSize: 18,
+                                        fontWeight: "bold"
+                                    }}
+                                >
+                                    {isFollowing ? "Followed" : "Follow"}
+                                </Text>
+                            </TouchableOpacity>
                     }
                 </View>
 
@@ -233,11 +275,11 @@ export default ProfileDetails = props => {
                                         showMode == "Grid" ?
                                             <TouchableOpacity
                                                 activeOpacity = {0.7}
-                                                onPress = {() => setViewedImageURI(item.photo_url)}
+                                                onPress = {() => setViewedImageURI(item.photo)}
                                             >
                                                 <Image
                                                     resizeMode = "cover"
-                                                    source = {{uri: item.photo_url}}
+                                                    source = {{uri: item.photo}}
                                                     style = {{
                                                         backgroundColor: "lightgray",
                                                         height: (Dimensions.get("screen").width - 60) / 3,
@@ -277,39 +319,41 @@ export default ProfileDetails = props => {
     )
 
     function LoadProfile(pickedUsername) {
-        fetch("https://reynova.000webhostapp.com/share-photo/users.json")
-        .then(res => res.json())
-        .then(resJson => {
-            let users = resJson.data
+        API().GetUsers()
+        .then(res => {
+            if(res.trim()[0] == "{" || res.trim()[0] == "[") {
+                let users = JSON.parse(res)
 
-            for(let user of users) {
-                if(user.username == pickedUsername) {
-                    setFollowing(user.following)
-                    setFollower(user.follower)
+                for(let user of users) {
+                    if(user.username == pickedUsername) {
+                        setFollowing(user.following)
+                        setFollower(user.follower)
 
-                    break
+                        break
+                    }
                 }
             }
         })
     }
 
     function LoadPhotos(pickedUsername) {
-        fetch("https://reynova.000webhostapp.com/share-photo/photos.json")
-        .then(res => res.json())
-        .then(resJson => {
-            let posts = resJson.data
+        API().GetPosts()
+        .then(res => {
+            if(res.trim()[0] == "{" || res.trim()[0] == "[") {
+                let posts = JSON.parse(res)
 
-            let photos = []
+                let photos = []
 
-            for(let post of posts) {
-                if(post.username == pickedUsername) {
-                    photos.push(post)
+                for(let post of posts) {
+                    if(post.username == pickedUsername) {
+                        photos.push(post)
+                    }
                 }
+
+                photos.sort((a, b) => (a.time < b.time) ? 1 : ((b.time < a.time) ? -1 : 0))
+
+                setPhotos(photos)
             }
-
-            photos.sort((a, b) => (a.time < b.time) ? 1 : ((b.time < a.time) ? -1 : 0))
-
-            setPhotos(photos)
         })
     }
 
@@ -326,5 +370,83 @@ export default ProfileDetails = props => {
                 actions: [NavigationActions.navigate({ routeName: "Login" })],
             })
         )
+    }
+
+    function Follow() {
+        API().GetUsers()
+        .then(res => {
+            if(res.trim()[0] == "{" || res.trim()[0] == "[") {
+                let otherUserDetails = undefined
+                let currentSessionUserDetails = undefined
+
+                for(user of JSON.parse(res)) {
+                    if(user.username == username) {
+                        otherUserDetails = user
+
+                        break
+                    }
+                }
+
+                let currentSessionUsername = GetRealmObjs(require("../refs/realmSess").Session)[0].username
+
+                for(user of JSON.parse(res)) {
+                    if(user.username == currentSessionUsername) {
+                        currentSessionUserDetails = user
+
+                        break
+                    }
+                }
+
+                let alreadyFollowingOtherUser = false
+
+                for(let otherUserFollower of otherUserDetails.follower) {
+                    if(otherUserFollower == currentSessionUsername) {
+                        alreadyFollowingOtherUser = true
+
+                        break
+                    }
+                }
+
+                if(alreadyFollowingOtherUser) {
+                    let newOtherUserFollower = []
+
+                    for(let otherUserFollower of otherUserDetails.follower) {
+                        if(otherUserFollower != currentSessionUsername) {
+                            newOtherUserFollower.push(otherUserFollower)
+                        }
+                    }
+
+                    otherUserDetails.follower = newOtherUserFollower
+
+                    let newCurrentSessionUserFollowing = []
+
+                    for(let currentSessionUserFollowing of currentSessionUserDetails.following) {
+                        if(currentSessionUserFollowing != username) {
+                            newCurrentSessionUserFollowing.push(currentSessionUserFollowing)
+                        }
+                    }
+
+                    currentSessionUserDetails.following = newCurrentSessionUserFollowing
+                } else {
+                    otherUserDetails.follower.push(currentSessionUsername)
+
+                    currentSessionUserDetails.following.push(username)
+                }
+
+                setIsFollowing(!alreadyFollowingOtherUser)
+
+                API().Follow(otherUserDetails)
+                .then(res => {
+                    LoadProfile(username)
+                    LoadPhotos(username)
+                })
+
+                API().Follow(currentSessionUserDetails)
+                .then(res => {
+                    LoadProfile(username)
+                    LoadPhotos(username)
+                })
+            }
+        })
     }
 }

@@ -26,27 +26,68 @@ import {
 import {
     GetRealmObjs
 } from "../helpers/Realm"
+
 import ActivityIndicatorModal from "../customComps/ActivityIndicatorModal"
+
+import {
+    API
+} from "../refs/API"
 
 export default Login = props => {
     let passwordTextInput = useRef()
 
     useEffect(() => {
         setTimeout(() => {
-            let realmSess = require("../refs/realmSess").Session
-
-            setLoadRealm(false)
-
-            if(GetRealmObjs(realmSess).length == 1) {
-                GoToSessionPage()
-            }
-        }, 50)
+            GetBaseURL()
+        }, 10)
     }, [])
 
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
     const [tryLogin, setTryLogin] = useState(false)
-    const [loadRealm, setLoadRealm] = useState(true)
+    const [loading, setLoading] = useState(true)
+
+    function GetBaseURL() {
+        setLoading(true)
+
+        API().GetBaseURL()
+        .then(res => {
+            if(res.trim()[0] == "{" || res.trim()[0] == "[") {
+                require("../refs/baseURL").baseURL = JSON.parse(res).base_url
+
+                let realmSess = require("../refs/realmSess").Session
+
+                setLoading(false)
+
+                if(GetRealmObjs(realmSess).length == 1) {
+                    GoToSessionPage()
+                }
+            } else {
+                setLoading(false)
+
+                Alert.alert(
+                    "Alert",
+                    "Couldn't connect to network!",
+                    [
+                        {text: 'Reload', onPress: () => GetBaseURL()},
+                    ],
+                    {cancelable: false}
+                )
+            }
+        })
+        .catch(err => {
+            setLoading(false)
+
+            Alert.alert(
+                "Alert",
+                "Couldn't connect to network!",
+                [
+                    {text: 'Reload', onPress: () => GetBaseURL()},
+                ],
+                {cancelable: false}
+            )
+        })
+    }
 
     return (
         <View
@@ -115,7 +156,6 @@ export default Login = props => {
                 <TextInput
                     autoCapitalize = "none"
                     onChangeText = {value => setPassword(value)}
-                    onSubmitEditing = {() => SubmitLogin()}
                     placeholder = "Password"
                     ref = {passwordTextInput}
                     secureTextEntry
@@ -132,38 +172,72 @@ export default Login = props => {
                 
                 <View
                     style = {{
-                        alignSelf: "center",
-                        backgroundColor: "black",
-                        borderRadius: 10,
-                        marginTop: 20,
-                        overflow: "hidden"
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        marginTop: 20
                     }}
                 >
-                    <TouchableOpacity
-                        activeOpacity = {0.7}
-                        onPress = {() => SubmitLogin()}
+                    <View
                         style = {{
-                            backgroundColor: "seagreen",
-                            paddingHorizontal: 20,
-                            paddingVertical: 10
+                            backgroundColor: "black",
+                            borderRadius: 10,
+                            overflow: "hidden"
                         }}
                     >
-                        <Text
+                        <TouchableOpacity
+                            activeOpacity = {0.7}
+                            onPress = {() => SubmitLogin()}
                             style = {{
-                                color: "white",
-                                fontSize: 24,
-                                fontWeight: "bold"
+                                backgroundColor: "seagreen",
+                                paddingHorizontal: 20,
+                                paddingVertical: 10
                             }}
                         >
-                            Login
-                        </Text>
-                    </TouchableOpacity>
+                            <Text
+                                style = {{
+                                    color: "white",
+                                    fontSize: 20,
+                                    fontWeight: "bold"
+                                }}
+                            >
+                                Login
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <View
+                        style = {{
+                            backgroundColor: "black",
+                            borderRadius: 10,
+                            overflow: "hidden"
+                        }}
+                    >
+                        <TouchableOpacity
+                            activeOpacity = {0.7}
+                            onPress = {() => SubmitSignUpAndLogin()}
+                            style = {{
+                                backgroundColor: "seagreen",
+                                paddingHorizontal: 20,
+                                paddingVertical: 10
+                            }}
+                        >
+                            <Text
+                                style = {{
+                                    color: "white",
+                                    fontSize: 20,
+                                    fontWeight: "bold"
+                                }}
+                            >
+                                Sign Up & Login
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
 
             <ActivityIndicatorModal
                 color = "green"
-                visible = {loadRealm || tryLogin}
+                visible = {loading || tryLogin}
             />
         </View>
     )
@@ -171,47 +245,116 @@ export default Login = props => {
     function SubmitLogin() {
         Keyboard.dismiss()
 
-        setTimeout(() => {
-            if(username === "") {
-                Alert.alert("Info", "Username cannot be empty!")
-            } else if(password === "") {
-                Alert.alert("Info", "Password cannot be empty!")
-            } else {
+        if(username === "") {
+            alert("Username cannot be empty!")
+        } else if(password === "") {
+            alert("Password cannot be empty!")
+        } else {
+            setTimeout(() => {
                 setTryLogin(true)
     
-                fetch("https://reynova.000webhostapp.com/share-photo/users.json")
-                .then(res => res.json())
-                .then(resJson => {
+                API().GetUsers()
+                .then(res => {
                     setTryLogin(false)
     
-                    let users = resJson.data
-    
-                    let userFound = false
-    
-                    for(let user of users) {
-                        if(user.username == username.toLowerCase() && user.password == password.toLowerCase()) {
-                            userFound = true
-    
-                            break
+                    if(res.trim()[0] == "{" || res.trim()[0] == "[") {
+                        let users = JSON.parse(res)
+        
+                        let userFound = false
+        
+                        for(let user of users) {
+                            if(user.username == username.toLowerCase() && user.password == password.toLowerCase()) {
+                                userFound = true
+        
+                                break
+                            }
+                        }
+        
+                        if(userFound) {
+                            let realmSess = require("../refs/realmSess").Session
+        
+                            realmSess.realm.write(() => {
+                                realmSess.realm.create(realmSess.schemaName, RealmRefs().Session.InitValue({
+                                    username: username
+                                }))
+                            })
+        
+                            GoToSessionPage()
+                        } else {
+                            alert("Wrong username or password!")
                         }
                     }
-    
-                    if(userFound) {
-                        let realmSess = require("../refs/realmSess").Session
-    
-                        realmSess.realm.write(() => {
-                            realmSess.realm.create(realmSess.schemaName, RealmRefs().Session.InitValue({
-                                username: username
-                            }))
-                        })
-    
-                        GoToSessionPage()
-                    } else {
-                        Alert.alert("Info", "Wrong username or password!")
-                    }
                 })
-            }
-        }, 50)
+                .catch(err => {
+                    setTryLogin(false)
+    
+                    alert(err.toString())
+                })
+            }, 10)
+        }
+    }
+
+    function SubmitSignUpAndLogin() {
+        if(username === "") {
+            alert("Username cannot be empty!")
+        } else if(password === "") {
+            alert("Password cannot be empty!")
+        } else {
+            setTryLogin(true)
+
+            API().GetUsers()
+            .then(res => {
+                if(res.trim()[0] == "{" || res.trim()[0] == "[") {
+                    let userAlreadyRegistered = false
+                    
+                    for(let user of JSON.parse(res)) {
+                        if(username == user.username) {
+                            userAlreadyRegistered = true
+                        }
+                    }
+
+                    if(userAlreadyRegistered) {
+                        setTryLogin(false)
+
+                        alert("Username " + username + " is already registered!")
+                    } else {
+                        API().SignUp({
+                            username: username,
+                            password: password,
+                            following: [],
+                            follower: []
+                        })
+                        .then(res => {
+                            setTryLogin(false)
+            
+                            if(res.trim()[0] == "{" || res.trim()[0] == "[") {
+                                let realmSess = require("../refs/realmSess").Session
+                    
+                                realmSess.realm.write(() => {
+                                    realmSess.realm.create(realmSess.schemaName, RealmRefs().Session.InitValue({
+                                        username: username
+                                    }))
+                                })
+            
+                                GoToSessionPage()
+                            }
+                        })
+                        .catch(err => {
+                            setTryLogin(false)
+            
+                            alert(err.toString())
+                        })
+                    }
+                } else {
+                    setTryLogin(false)
+                }
+            })
+            .catch(err => {
+                setTryLogin(false)
+
+                alert(err.toString())
+            })
+        }
     }
 
     function GoToSessionPage() {

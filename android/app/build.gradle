@@ -191,6 +191,7 @@ dependencies {
     implementation project(':realm')
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "com.facebook.react:react-native:+"  // From node_modules
+    implementation project(':react-native-get-real-path')
 
     if (enableHermes) {
         def hermesPath = "../../node_modules/hermes-engine/android/";
