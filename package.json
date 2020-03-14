@@ -33,7 +33,7 @@
     "@babel/core": "7.5.0",
     "@babel/runtime": "7.5.0",
     "@react-native-community/eslint-config": "0.0.3",
-    "acorn": "7.0.0",
+    "acorn": "7.1.1",
     "babel-jest": "24.1.0",
     "eslint": "5.16.0",
     "jest": "24.1.0",
